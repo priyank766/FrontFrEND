@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+*egg-info/
+dist/
+build/
+.venv/
+uv.lock
+.env
+*.log
+*.prof
+.DS_Store
+prompt.md
