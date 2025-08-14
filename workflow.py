@@ -9,10 +9,12 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).parent / "src"))
 
 from ui_advisor import UIAdvisorCrew
+from backend_integrator import BackendIntegration
 from utils import read_json_file, setup_logging
+from models import LLMConfig
 
 # --- Configuration ---
-REPO_URL = "https://github.com/priyank766/YT_TRANSCRIBER"
+REPO_URL = "https://github.com/priyank766/RAG-vs-Fine-Tuning"
 PROJECT_ROOT = Path(__file__).parent
 REPO_DIR = PROJECT_ROOT / "repo"
 DATA_DIR = PROJECT_ROOT / "data"
@@ -49,10 +51,16 @@ def main():
     Main function to orchestrate the entire Front FrEND workflow.
     """
     # --- Setup ---
+    # Set stdout to utf-8
+    sys.stdout.reconfigure(encoding="utf-8")
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     LOGS_DIR.mkdir(parents=True, exist_ok=True)
     workflow_log_path = LOGS_DIR / "workflow.log"
     setup_logging(workflow_log_path)
+
+    # Force LiteLLM to use the model defined in LLMConfig
+    os.environ["LITELLM_MODEL"] = LLMConfig().model_name
+    logging.info(f"Configured LiteLLM to use model: {os.environ['LITELLM_MODEL']}")
 
     logging.info(f"Starting workflow for repository: {REPO_URL}")
 
@@ -102,8 +110,39 @@ def main():
             print("Final Result:\n")
             print(result)
 
+            # Determine the path to the modified UI file for Phase 4
+            ui_file_for_backend_analysis = ui_detection_output.get("examples", [])[0]
+            if not ui_file_for_backend_analysis:
+                logging.error(
+                    "Could not determine UI file path for backend analysis. Exiting."
+                )
+                sys.exit(1)
+
+            logging.info("--- Starting: Phase 4: Backend Code Generation ---")
+            try:
+                backend_integration_crew = BackendIntegration(
+                    frontend_changes_output_path=ui_file_for_backend_analysis,
+                    file_tree_path=file_tree_json_path,
+                )
+                print(
+                    "\n🚀 Kicking off the Backend Integration Crew... this may take a few moments.\n"
+                )
+                backend_result = backend_integration_crew.run()
+                print("\n--- ✅ Backend Integration Crew Finished ---")
+                print("Final Result:\n")
+                print(backend_result)
+
+            except Exception as e:
+                logging.exception("ERROR during Backend Integration execution.")
+                print(
+                    f"An unexpected error occurred during the Backend Integration phase: {e}"
+                )
+                sys.exit(1)
+
         else:
-            logging.info("No UI detected. Skipping UI Advisor phase.")
+            logging.info(
+                "No UI detected. Skipping UI Advisor and Backend Integration phases."
+            )
             print("No UI detected. The next step would be to generate a new one.")
             # In a complete application, this would trigger the UI Generator agent.
 
