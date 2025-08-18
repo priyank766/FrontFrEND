@@ -61,13 +61,13 @@ AI generates code improvements (UI fixes, best practices, accessibility, respons
 
 Changes are shown in an embedded sandbox (original vs AI-improved).
 
-
+(working)
 
 5. Pull Request 🔀
 
 With one click, FrontFrEND opens a PR to your repo with suggested changes.
 
-
+(working)
 
 
 
@@ -92,11 +92,6 @@ Generated pull request
 # Clone this repo
 git clone https://github.com/your-username/frontfrend.git
 cd frontfrend
-
-# Create virtual environment
-python -m venv .venv
-source .venv/bin/activate   # (Linux/Mac)
-.venv\Scripts\activate      # (Windows)
 
 # Install dependencies
 pip install uv
@@ -124,3 +119,4 @@ python app.py
 Pull requests are welcome! For major changes, please open an issue first to discuss what you’d like to change.
 
 ⚡ FrontFrEND: Making frontend code smarter, cleaner, and faster.
+
