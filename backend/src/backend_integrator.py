@@ -6,9 +6,10 @@ from models import LLMConfig
 
 
 class BackendIntegration:
-    def __init__(self, frontend_changes_output_path: Path, file_tree_path: Path):
+    def __init__(self, frontend_changes_output_path: Path, file_tree_path: Path, user_preferences: str):
         self.frontend_changes_output_path = frontend_changes_output_path
         self.file_tree_path = file_tree_path
+        self.user_preferences = user_preferences
         self.llm = LLM(model=LLMConfig().model_name, temperature=LLMConfig().temperature)
         self.file_read_tool = read_file
         self.file_write_tool = write_file
@@ -22,7 +23,7 @@ class BackendIntegration:
         # Validator Agent
         validator_agent = Agent(
             role="Frontend-Backend Change Validator",
-            goal="Analyze frontend changes and identify potential breaking changes or necessary backend adjustments.",
+            goal=f"""Analyze frontend changes and identify potential breaking changes or necessary backend adjustments, keeping in mind the user's preferences: '{self.user_preferences}'.""",
             backstory=(
                 "You are an expert in identifying discrepancies and integration points between frontend and backend codebases. "
                 "Your primary task is to review frontend modifications and determine if any new variables, changed names, "
@@ -38,7 +39,7 @@ class BackendIntegration:
         # Backend Agent
         backend_agent = Agent(
             role="Backend Code Adjuster",
-            goal="Implement necessary changes in the backend code based on the validator's findings, ensuring perfect syntax, indentation, and idiomatic Python/FastAPI patterns.",
+            goal=f"""Implement necessary changes in the backend code based on the validator's findings, ensuring perfect syntax, indentation, and idiomatic Python/FastAPI patterns, while respecting the user's preferences: '{self.user_preferences}'.""",
             backstory=(
                 "You are a highly skilled and meticulous backend developer, proficient in FastAPI and Python. "
                 "Your expertise lies in precisely modifying existing backend code to accommodate frontend changes, "
@@ -57,7 +58,7 @@ class BackendIntegration:
         validator_task = Task(
             description=f"""
             1. **Read Frontend Changes:** Read the content of the file at '{self.frontend_changes_output_path}' to understand the frontend modifications.
-            2. **Analyze Backend Impact:** Based on the frontend changes, identify any new variables, changed names, or structural alterations that would require changes in the backend.
+            2. **Analyze Backend Impact:** Based on the frontend changes (and keeping in mind the user's preferences: '{self.user_preferences}'), identify any new variables, changed names, or structural alterations that would require changes in the backend.
                Consider common backend components like:
                - FastAPI endpoints (routes, request bodies, response models)
                - Pydantic models
@@ -104,8 +105,8 @@ class BackendIntegration:
 
         # Backend Task
         backend_task = Task(
-            description="""
-            Based on the JSON output from the 'Frontend-Backend Change Validator' agent:
+            description=f"""
+            Based on the JSON output from the 'Frontend-Backend Change Validator' agent and the user's preferences ('{self.user_preferences}'):
 
             1. **Parse Validator Output:** Carefully parse the JSON output from the 'Frontend-Backend Change Validator' agent.
             2. **Check for Changes:** If the parsed JSON indicates `"changes_required": false`, then output the `"message"` from the validator's output (e.g., "No backend changes required.") and do nothing else.

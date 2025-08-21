@@ -10,6 +10,7 @@ sys.path.append(str(Path(__file__).parent / "src"))
 
 from ui_advisor import UIAdvisorCrew
 from backend_integrator import BackendIntegration
+from design_validator import DesignValidatorCrew
 from utils import read_json_file, setup_logging
 from models import LLMConfig
 
@@ -98,8 +99,17 @@ def main():
             logging.info(f"UI detected: {ui_detection_output.get('tech')}")
             logging.info(f"Example UI files: {ui_detection_output.get('examples')}")
 
+            # Get user preferences
+            user_preferences = input(
+                "\nPlease describe your desired UI/UX style (e.g., 'modern and minimalist with a dark theme', 'professional with corporate branding', 'playful and colorful'): "
+            )
+            logging.info(f"User preferences: {user_preferences}")
+
             # Instantiate and run the UIAdvisorCrew
-            advisor_crew = UIAdvisorCrew(ui_detection_output=ui_detection_output)
+            advisor_crew = UIAdvisorCrew(
+                ui_detection_output=ui_detection_output,
+                user_preferences=user_preferences,
+            )
 
             print(
                 "\n🚀 Kicking off the UI Advisor & Generator Crew... this may take a few moments.\n"
@@ -123,6 +133,7 @@ def main():
                 backend_integration_crew = BackendIntegration(
                     frontend_changes_output_path=ui_file_for_backend_analysis,
                     file_tree_path=file_tree_json_path,
+                    user_preferences=user_preferences,
                 )
                 print(
                     "\n🚀 Kicking off the Backend Integration Crew... this may take a few moments.\n"
@@ -131,6 +142,30 @@ def main():
                 print("\n--- ✅ Backend Integration Crew Finished ---")
                 print("Final Result:\n")
                 print(backend_result)
+
+                logging.info("--- Starting: Phase 5: Design Validation ---")
+                try:
+                    modified_files = [ui_file_for_backend_analysis]
+                    if backend_result and "Successfully modified:" in backend_result:
+                        modified_backend_files = backend_result.replace("Successfully modified:", "").strip().split(", ")
+                        modified_files.extend(modified_backend_files)
+
+                    design_validator_crew = DesignValidatorCrew(
+                        files_to_review=modified_files,
+                        user_preferences=user_preferences,
+                    )
+                    print(
+                        "\n🚀 Kicking off the Design Validator Crew... this may take a few moments.\n"
+                    )
+                    validation_result = design_validator_crew.run()
+                    print("\n--- ✅ Design Validator Crew Finished ---")
+                    print("Final Result:\n")
+                    print(validation_result)
+
+                except Exception as e:
+                    logging.exception("ERROR during Design Validation execution.")
+                    print(f"An unexpected error occurred during the Design Validation phase: {e}")
+                    sys.exit(1)
 
             except Exception as e:
                 logging.exception("ERROR during Backend Integration execution.")

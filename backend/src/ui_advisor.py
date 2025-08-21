@@ -5,11 +5,12 @@ from models import LLMConfig
 
 
 class UIAdvisorCrew:
-    def __init__(self, ui_detection_output: dict):
+    def __init__(self, ui_detection_output: dict, user_preferences: str):
         """
-        Initializes the UIAdvisorCrew with UI detection data.
+        Initializes the UIAdvisorCrew with UI detection data and user preferences.
         """
         self.ui_detection_output = ui_detection_output
+        self.user_preferences = user_preferences
         self.llm = LLM(
             model=LLMConfig().model_name, temperature=LLMConfig().temperature
         )
@@ -32,7 +33,9 @@ class UIAdvisorCrew:
 
         ui_advisor_agent = Agent(
             role="Expert UI/UX and Accessibility Consultant",
-            goal="Provide actionable, high-level, and *creatively aesthetic* suggestions to improve the UI/UX and accessibility of the provided code, focusing on backgrounds, gradients, animations, and font styles while ensuring excellent readability.",
+            goal=f"""Provide actionable, high-level, and *creatively aesthetic* suggestions to improve the UI/UX and accessibility of the provided code.
+            The user's preferences are: '{self.user_preferences}'.
+            Focus on backgrounds, gradients, animations, and font styles while ensuring excellent readability.""",
             backstory=(
                 "You are a world-renowned UI/UX consultant with an exceptional passion for innovative, creative, and highly readable design. "
                 "You specialize in transforming UIs with unique and aesthetically pleasing backgrounds, dynamic gradients, subtle animations, "
@@ -50,7 +53,9 @@ class UIAdvisorCrew:
 
         code_generator_agent = Agent(
             role="Senior Frontend Developer and Python Code Quality Expert",
-            goal="Implement UI/UX suggestions by modifying existing frontend code, ensuring perfect Python syntax, idiomatic code, high quality implementation, and strictly avoiding the addition of new, unrequested features or content. Focus on creative and aesthetically pleasing backgrounds, gradients, animations, and font styles while maintaining excellent readability.",
+            goal=f"""Implement UI/UX suggestions by modifying existing frontend code, ensuring perfect Python syntax, idiomatic code, high quality implementation, and strictly avoiding the addition of new, unrequested features or content.
+            The user's preferences are: '{self.user_preferences}'.
+            Focus on creative and aesthetically pleasing backgrounds, gradients, animations, and font styles while maintaining excellent readability.""",
             backstory=(
                 "You are a meticulous senior frontend developer who excels at implementing modern and creative frontend practices. "
                 "You are also a strict Python code quality expert, ensuring all generated code adheres to PEP 8, is syntactically perfect, "
@@ -89,7 +94,7 @@ class UIAdvisorCrew:
 
             3. **Provide Context-Specific Suggestions.**
                Based *directly* on your analysis of the code, provide at least 5 concrete and actionable improvement suggestions in a Markdown list.
-               The suggestions should follow these UI/UX guidelines:
+               The suggestions should follow these UI/UX guidelines and incorporate the user's preferences: '{self.user_preferences}'.
                - Try unique designs for backgrounds, font styles, gradients, animations, and visuals/images for a better UI.
                - Always prioritize readability (use proper color combinations which are readable in different backgrounds; avoid white background with white text or white button that cause readability issues).
                  Example: light backgrounds with light color text or white buttons that cause readability issues.
@@ -98,7 +103,7 @@ class UIAdvisorCrew:
             """,
             expected_output="""A Markdown-formatted response containing ONLY:
             1. A brief technical summary of the file.
-            2. A list of at least 5 actionable UI/UX improvement suggestions.
+            2. A list of at least 5 actionable UI/UX improvement suggestions based on the user's preferences.
             DO NOT include the original file content in your output.
             """,
             agent=ui_advisor_agent,
@@ -106,7 +111,7 @@ class UIAdvisorCrew:
 
         generation_task = Task(
             description=f"""
-            Your task is to implement the UI/UX improvement suggestions from the UI Advisor by modifying the original source code.
+            Your task is to implement the UI/UX improvement suggestions from the UI Advisor by modifying the original source code, keeping in mind the user's preferences: '{self.user_preferences}'.
 
             **Mandatory Steps:**
             1. **Read the Original File:** Before writing any code, you MUST use the 'file_reader' tool to read the full content of the original UI file at: '{ui_file_relative_path}'.

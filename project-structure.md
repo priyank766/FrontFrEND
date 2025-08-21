@@ -66,7 +66,7 @@ this agent can edit appropriate changes to the file only if 4.1 agent meention a
 if 4.1 mention there is no changes for backend functionality then no changes 
 
 
-## Phase 5: Design Validation
+## Phase 5: Design Validation ✅
 
 **Agent: Design Validator**
 
@@ -74,22 +74,15 @@ if 4.1 mention there is no changes for backend functionality then no changes
 
 ---
 
-## Phase 6: Code Packaging
+## Phase 6: Frontend Done ✅
 
-**Agent: Packager**
-
-- **Changes:** Only check syntax and formatting; skip deep validation.
-- **Prompt for development:** Combine all code into final structure, create a `README.md` with manual file creation and run instructions, and package into final JSON output.
+This phase signifies the completion of frontend generation and initial setup.
 
 ---
 
-## Phase 7: Documentation & Management
+## Phase 7: Connect Frontend to Backend
 
-**Agent: PM Bot**
-
-- **Changes:** Only maintain docs and summarize project state — skip comprehensive technical validation.
-- **Prompt for development:** Update README.md with usage and roadmap, and produce a Kanban-like task summary.
+This phase focuses on integrating the generated frontend with the existing or newly generated backend.
 
 ---
-
 _End of Prompt File._

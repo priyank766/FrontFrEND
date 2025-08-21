@@ -1,0 +1,4 @@
+requests
+crewai
+crewai_tools
+Flask

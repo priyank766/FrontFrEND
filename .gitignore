@@ -10,3 +10,6 @@ uv.lock
 *.prof
 .DS_Store
 prompt.md
+frontend/node_modules/
+frontend/bun.lockb
+frontend/package-lock.json

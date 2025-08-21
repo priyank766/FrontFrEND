@@ -1,0 +1,219 @@
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { 
+  CheckCircle, 
+  ExternalLink, 
+  Github, 
+  ArrowLeft, 
+  Share2,
+  Copy,
+  Calendar,
+  User
+} from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+
+interface PRSuccessProps {
+  onStartNew: () => void;
+  repoUrl: string;
+}
+
+export const PRSuccess = ({ onStartNew, repoUrl }: PRSuccessProps) => {
+  const { toast } = useToast();
+  
+  const repoName = repoUrl.split("/").pop() || "repository";
+  const prUrl = `${repoUrl}/pull/42`; // Mock PR URL
+  
+  const handleCopyPR = async () => {
+    try {
+      await navigator.clipboard.writeText(prUrl);
+      toast({
+        title: "Copied to clipboard",
+        description: "Pull request URL has been copied to your clipboard.",
+      });
+    } catch (err) {
+      toast({
+        title: "Copy failed",
+        description: "Unable to copy to clipboard. Please copy the URL manually.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `FrontFrEND improvements for ${repoName}`,
+          text: `Check out these AI-generated frontend improvements!`,
+          url: prUrl,
+        });
+      } catch (err) {
+        // User cancelled sharing
+      }
+    } else {
+      handleCopyPR();
+    }
+  };
+
+  return (
+    <section className="min-h-screen flex items-center justify-center py-20 px-4">
+      <div className="max-w-4xl mx-auto text-center space-y-12">
+        {/* Success Header */}
+        <div className="space-y-6 animate-fade-in">
+          <div className="w-24 h-24 rounded-full gradient-primary flex items-center justify-center mx-auto animate-glow">
+            <CheckCircle className="w-12 h-12 text-white" />
+          </div>
+          
+          <div className="space-y-4">
+            <h2 className="text-4xl lg:text-6xl font-bold gradient-primary bg-clip-text text-transparent">
+              Pull Request Created! 🎉
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              Your AI-improved frontend code has been successfully pushed to GitHub as a pull request.
+            </p>
+          </div>
+        </div>
+
+        {/* PR Details Card */}
+        <Card className="glass-card glow-subtle animate-scale-in interactive-glow">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 justify-center text-2xl">
+              <Github className="w-8 h-8 text-primary" />
+              Pull Request Details
+            </CardTitle>
+            <CardDescription className="text-lg">
+              Review and merge your improvements in <span className="font-mono font-semibold">{repoName}</span>
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* PR Info */}
+            <div className="grid md:grid-cols-3 gap-6 text-left">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Github className="w-4 h-4" />
+                  PR Number
+                </div>
+                <div className="font-mono font-semibold text-lg">#42</div>
+              </div>
+              
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Calendar className="w-4 h-4" />
+                  Created
+                </div>
+                <div className="font-semibold">Just now</div>
+              </div>
+              
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <User className="w-4 h-4" />
+                  Author
+                </div>
+                <div className="font-semibold">frontfrend-bot</div>
+              </div>
+            </div>
+
+            {/* PR Title and Description */}
+            <div className="text-left space-y-4 p-4 bg-muted/30 rounded-lg">
+              <h3 className="text-lg font-semibold">
+                🤖 AI Frontend Improvements by FrontFrEND
+              </h3>
+              <div className="space-y-2 text-sm text-muted-foreground">
+                <p>This PR includes AI-generated improvements to your frontend code:</p>
+                <ul className="list-disc list-inside space-y-1 ml-4">
+                  <li>Enhanced UI design with better color schemes and spacing</li>
+                  <li>Improved accessibility with ARIA labels and semantic HTML</li>
+                  <li>Performance optimizations for faster loading times</li>
+                  <li>Mobile-responsive design improvements</li>
+                </ul>
+                <p className="mt-3">
+                  <strong>Generated by:</strong> FrontFrEND AI • Review carefully before merging
+                </p>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Button 
+                variant="hero" 
+                size="lg" 
+                className="flex-1 group"
+                asChild
+              >
+                <a 
+                  href={prUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="no-underline"
+                >
+                  <ExternalLink className="mr-2 w-5 h-5 transition-transform group-hover:scale-110" />
+                  View Pull Request on GitHub
+                </a>
+              </Button>
+              
+              <Button 
+                variant="outline" 
+                size="lg"
+                onClick={handleCopyPR}
+                className="group"
+              >
+                <Copy className="mr-2 w-4 h-4 transition-transform group-hover:scale-110" />
+                Copy PR Link
+              </Button>
+              
+              <Button 
+                variant="secondary" 
+                size="lg"
+                onClick={handleShare}
+                className="group"
+              >
+                <Share2 className="mr-2 w-4 h-4 transition-transform group-hover:scale-110" />
+                Share
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Next Steps */}
+        <Card className="bg-muted/50 border-dashed animate-slide-in">
+          <CardContent className="p-6">
+            <h3 className="text-lg font-semibold mb-3">What's Next?</h3>
+            <div className="grid md:grid-cols-3 gap-4 text-sm">
+              <div className="text-center space-y-2">
+                <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mx-auto">
+                  1
+                </div>
+                <p><strong>Review</strong> the changes in the GitHub PR</p>
+              </div>
+              <div className="text-center space-y-2">
+                <div className="w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center mx-auto">
+                  2
+                </div>
+                <p><strong>Test</strong> the improvements locally</p>
+              </div>
+              <div className="text-center space-y-2">
+                <div className="w-8 h-8 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center mx-auto">
+                  3
+                </div>
+                <p><strong>Merge</strong> when you're satisfied</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* New Analysis Button */}
+        <div className="pt-8">
+          <Button 
+            variant="outline" 
+            size="lg"
+            onClick={onStartNew}
+            className="group"
+          >
+            <ArrowLeft className="mr-2 w-4 h-4 transition-transform group-hover:-translate-x-1" />
+            Analyze Another Repository
+          </Button>
+        </div>
+      </div>
+    </section>
+  );
+};
