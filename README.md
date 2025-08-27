@@ -86,22 +86,6 @@ Side-by-side preview
 Generated pull request
 
 ---
-
-🧑‍💻 Setup (Local Development)
-
-# Clone this repo
-git clone https://github.com/your-username/frontfrend.git
-cd frontfrend
-
-# Install dependencies
-pip install uv
- uv pip install -r requirements.txt
-
-# Run Flask server
-python app.py
-
----
-
 🌍 Roadmap
 
 [ ] Multi-language support (React, Vue, Angular)
@@ -119,4 +103,5 @@ python app.py
 Pull requests are welcome! For major changes, please open an issue first to discuss what you’d like to change.
 
 ⚡ FrontFrEND: Making frontend code smarter, cleaner, and faster.
+
 
