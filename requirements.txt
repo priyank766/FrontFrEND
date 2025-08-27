@@ -2,3 +2,4 @@ requests
 crewai
 crewai_tools
 Flask
+Flask-Cors

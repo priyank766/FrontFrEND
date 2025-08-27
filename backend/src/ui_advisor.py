@@ -1,20 +1,25 @@
 import logging
 from crewai import Agent, Task, Crew, Process, LLM
-from tools import read_file, write_file
+from tools.tools import read_file, write_file
 from models import LLMConfig
+from pathlib import Path
 
 
 class UIAdvisorCrew:
-    def __init__(self, ui_detection_output: dict, user_preferences: str):
+    def __init__(self, repo_path: Path, ui_detection_output: dict, user_preferences: str):
         """
         Initializes the UIAdvisorCrew with UI detection data and user preferences.
         """
+        self.repo_path = repo_path
         self.ui_detection_output = ui_detection_output
         self.user_preferences = user_preferences
         self.llm = LLM(
-            model=LLMConfig().model_name, temperature=LLMConfig().temperature
+            model=LLMConfig().model_name,
+            temperature=LLMConfig().temperature,
+            base_url=LLMConfig().base_url,
         )
         self.file_read_tool = read_file
+        self.file_write_tool = write_file
 
     def run(self):
         """
@@ -30,6 +35,9 @@ class UIAdvisorCrew:
         )
         if not ui_file_relative_path:
             return "No UI file path found in detection output. Cannot run the UI Advisor crew."
+
+        # Resolve the full path to the UI file
+        full_ui_file_path = self.repo_path.joinpath(ui_file_relative_path).resolve()
 
         ui_advisor_agent = Agent(
             role="Expert UI/UX and Accessibility Consultant",
@@ -79,14 +87,14 @@ class UIAdvisorCrew:
             ),
             verbose=False,
             llm=self.llm,
-            tools=[write_file],
+            tools=[self.file_write_tool],
             allow_delegation=False,
         )
 
         advisory_task = Task(
             description=f"""
             1. **Mandatory First Step: Read the File's Content.**
-               You MUST use the 'file_reader' tool to read the full content of the UI file located at the relative path: '{ui_file_relative_path}'.
+               You MUST use the 'file_reader' tool to read the full content of the UI file located at the path: '{full_ui_file_path}'.
                Do not proceed without successfully reading the file.
 
             2. **Analyze and Summarize.**
@@ -114,7 +122,7 @@ class UIAdvisorCrew:
             Your task is to implement the UI/UX improvement suggestions from the UI Advisor by modifying the original source code, keeping in mind the user's preferences: '{self.user_preferences}'.
 
             **Mandatory Steps:**
-            1. **Read the Original File:** Before writing any code, you MUST use the 'file_reader' tool to read the full content of the original UI file at: '{ui_file_relative_path}'.
+            1. **Read the Original File:** Before writing any code, you MUST use the 'file_reader' tool to read the full content of the original UI file at: '{full_ui_file_path}'.
             2. **Integrate Suggestions:** Take the *entire content* of the original file you just read, and integrate the specific UI/UX improvement suggestions provided by the UI Advisor into it. Do not remove any existing code unless explicitly part of a suggestion.
                When implementing the changes, you must follow these UI/UX guidelines:
                - Try unique designs for backgrounds, font styles, gradients, animations, and visuals/images for a better UI.
@@ -140,11 +148,11 @@ This output MUST represent the *entire* file content, not just the changes or a 
             - Tend to make creative changes to design while following the rules.
             You MUST use the 'file_writer' tool for this.
 
-            The file path to write to is: '{ui_file_relative_path}'
+            The file path to write to is: '{full_ui_file_path}'
 
             The content to write is the full code provided in the context from the previous task.
             """,
-            expected_output=f"A confirmation message stating that the file '{ui_file_relative_path}' was written successfully.",
+            expected_output=f"A confirmation message stating that the file '{full_ui_file_path}' was written successfully.",
             agent=code_writer_agent,
             context=[generation_task],
         )

@@ -1,0 +1,184 @@
+{
+  "files": [
+    {
+      "path": ".gitignore",
+      "size": 143,
+      "type": ""
+    },
+    {
+      "path": "dataset.txt",
+      "size": 6674,
+      "type": ".txt"
+    },
+    {
+      "path": "llm_ft.py",
+      "size": 3907,
+      "type": ".py"
+    },
+    {
+      "path": "RAG.py",
+      "size": 3703,
+      "type": ".py"
+    },
+    {
+      "path": "README.md",
+      "size": 5452,
+      "type": ".md"
+    },
+    {
+      "path": "requirements.txt",
+      "size": 204,
+      "type": ".txt"
+    },
+    {
+      "path": "TechNova_Profile.json",
+      "size": 2382,
+      "type": ".json"
+    },
+    {
+      "path": "web.html",
+      "size": 38841,
+      "type": ".html"
+    },
+    {
+      "path": ".git/config",
+      "size": 307,
+      "type": ""
+    },
+    {
+      "path": ".git/description",
+      "size": 73,
+      "type": ""
+    },
+    {
+      "path": ".git/HEAD",
+      "size": 21,
+      "type": ""
+    },
+    {
+      "path": ".git/index",
+      "size": 681,
+      "type": ""
+    },
+    {
+      "path": ".git/packed-refs",
+      "size": 112,
+      "type": ""
+    },
+    {
+      "path": ".git/hooks/applypatch-msg.sample",
+      "size": 478,
+      "type": ".sample"
+    },
+    {
+      "path": ".git/hooks/commit-msg.sample",
+      "size": 896,
+      "type": ".sample"
+    },
+    {
+      "path": ".git/hooks/fsmonitor-watchman.sample",
+      "size": 4726,
+      "type": ".sample"
+    },
+    {
+      "path": ".git/hooks/post-update.sample",
+      "size": 189,
+      "type": ".sample"
+    },
+    {
+      "path": ".git/hooks/pre-applypatch.sample",
+      "size": 424,
+      "type": ".sample"
+    },
+    {
+      "path": ".git/hooks/pre-commit.sample",
+      "size": 1649,
+      "type": ".sample"
+    },
+    {
+      "path": ".git/hooks/pre-merge-commit.sample",
+      "size": 416,
+      "type": ".sample"
+    },
+    {
+      "path": ".git/hooks/pre-push.sample",
+      "size": 1374,
+      "type": ".sample"
+    },
+    {
+      "path": ".git/hooks/pre-rebase.sample",
+      "size": 4898,
+      "type": ".sample"
+    },
+    {
+      "path": ".git/hooks/pre-receive.sample",
+      "size": 544,
+      "type": ".sample"
+    },
+    {
+      "path": ".git/hooks/prepare-commit-msg.sample",
+      "size": 1492,
+      "type": ".sample"
+    },
+    {
+      "path": ".git/hooks/push-to-checkout.sample",
+      "size": 2783,
+      "type": ".sample"
+    },
+    {
+      "path": ".git/hooks/sendemail-validate.sample",
+      "size": 2308,
+      "type": ".sample"
+    },
+    {
+      "path": ".git/hooks/update.sample",
+      "size": 3650,
+      "type": ".sample"
+    },
+    {
+      "path": ".git/info/exclude",
+      "size": 240,
+      "type": ""
+    },
+    {
+      "path": ".git/logs/HEAD",
+      "size": 192,
+      "type": ""
+    },
+    {
+      "path": ".git/logs/refs/heads/main",
+      "size": 192,
+      "type": ""
+    },
+    {
+      "path": ".git/logs/refs/remotes/origin/HEAD",
+      "size": 192,
+      "type": ""
+    },
+    {
+      "path": ".git/objects/pack/pack-a4a94539651902ecf555852d120d5b29ba38e1c6.idx",
+      "size": 2052,
+      "type": ".idx"
+    },
+    {
+      "path": ".git/objects/pack/pack-a4a94539651902ecf555852d120d5b29ba38e1c6.pack",
+      "size": 45148,
+      "type": ".pack"
+    },
+    {
+      "path": ".git/objects/pack/pack-a4a94539651902ecf555852d120d5b29ba38e1c6.rev",
+      "size": 192,
+      "type": ".rev"
+    },
+    {
+      "path": ".git/refs/heads/main",
+      "size": 41,
+      "type": ""
+    },
+    {
+      "path": ".git/refs/remotes/origin/HEAD",
+      "size": 30,
+      "type": ""
+    }
+  ]
+}

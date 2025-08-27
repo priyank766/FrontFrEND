@@ -1,8 +1,7 @@
 from pathlib import Path
 from crewai.tools import tool
 
-# Using a relative path from the project root for portability.
-REPO_ROOT_PATH = Path("./repo").resolve()
+REPO_ROOT_PATH = Path(__file__).parent.parent.parent.joinpath("repo").resolve()
 
 
 @tool("file_reader")
@@ -27,7 +26,6 @@ def read_file(file_path: str) -> str:
         return content
     except Exception as e:
         return f"An error occurred while trying to read the file: {e}"
-
 
 
 @tool("file_writer")

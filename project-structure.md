@@ -80,9 +80,33 @@ This phase signifies the completion of frontend generation and initial setup.
 
 ---
 
-## Phase 7: Connect Frontend to Backend
+## Phase 7: Connect Frontend to Backend ✅
 
-This phase focuses on integrating the generated frontend with the existing or newly generated backend.
+This phase focuses on integrating the generated frontend with the backend.
 
+---
+
+## Phase 8: Git Authentication
+
+This phase focuses on implementing secure authentication mechanisms for interacting with Git repositories (e.g., GitHub API).
+
+---
+
+## Phase 9: Complete Testing
+
+This phase involves comprehensive testing of all integrated components and functionalities to ensure stability, reliability, and adherence to requirements.
+
+---
+
+## Phase 10: Deployment on Azure & LLM Integration
+
+This phase focuses on deploying the application to Azure, configuring Azure-provided OpenAI models for LLM functionalities, and managing deployment credits.
+
+---
+
+## Phase 11: Free Usage Limits / Token System
+
+This phase involves implementing a system to provide users with limited free usage, such as a token-based system (e.g., "1 flowers" as a token) to access product features.
+if it is used then say no more for use FrontFrEND
 ---
 _End of Prompt File._

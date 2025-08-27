@@ -36,11 +36,11 @@ def detect_ui(file_tree: dict) -> dict:
     react_files = [
         f["path"]
         for f in files
-        if f["path"].endswith((".js", ".jsx")) or f["path"].endswith("package.json")
+        if f["path"].endswith((".js", ".jsx", ".ts", ".tsx")) or f["path"].endswith("package.json")
     ]
-    if any(f.endswith("App.js") or f.endswith("App.jsx") for f in react_files) and any(
+    if any(f.endswith(("App.js", "App.jsx", "App.tsx")) for f in react_files) and any(
         f.endswith("package.json") for f in react_files
-    ):
+    ) and any(f.endswith("tsconfig.json") for f in files):
         exists = True
         tech = "React"
         examples = react_files

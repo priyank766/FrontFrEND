@@ -1,16 +1,27 @@
 from crewai import Agent, Task, Crew, Process, LLM
-from tools import read_file, write_file
+from tools.tools import read_file, write_file
 from pathlib import Path
 import json
 from models import LLMConfig
 
 
 class BackendIntegration:
-    def __init__(self, frontend_changes_output_path: Path, file_tree_path: Path, user_preferences: str):
+    def __init__(
+        self,
+        repo_path: Path,
+        frontend_changes_output_path: str,
+        file_tree_path: Path,
+        user_preferences: str,
+    ):
+        self.repo_path = repo_path
         self.frontend_changes_output_path = frontend_changes_output_path
         self.file_tree_path = file_tree_path
         self.user_preferences = user_preferences
-        self.llm = LLM(model=LLMConfig().model_name, temperature=LLMConfig().temperature)
+        self.llm = LLM(
+            model=LLMConfig().model_name,
+            temperature=LLMConfig().temperature,
+            base_url=LLMConfig().base_url,
+        )
         self.file_read_tool = read_file
         self.file_write_tool = write_file
 
@@ -20,15 +31,25 @@ class BackendIntegration:
             file_tree_data = json.load(f)
         all_repo_files = [f["path"] for f in file_tree_data.get("files", [])]
 
+        # Resolve the full path to the frontend changes file
+        full_frontend_changes_path = self.repo_path.joinpath(
+            self.frontend_changes_output_path
+        ).resolve()
+
         # Validator Agent
         validator_agent = Agent(
             role="Frontend-Backend Change Validator",
-            goal=f"""Analyze frontend changes and identify potential breaking changes or necessary backend adjustments, keeping in mind the user's preferences: '{self.user_preferences}'.""",
+            goal=f"""
+            Your mission is to act as a bridge between the frontend and backend.
+            You must analyze the changes made to the frontend code and determine the precise impact on the backend.
+            This involves identifying any new data requirements, API changes, or other modifications needed to support the new frontend features.
+            You must be meticulous in your analysis to prevent any integration issues.
+            User preferences to consider: '{self.user_preferences}'.
+            """,
             backstory=(
-                "You are an expert in identifying discrepancies and integration points between frontend and backend codebases. "
-                "Your primary task is to review frontend modifications and determine if any new variables, changed names, "
-                "or structural alterations require corresponding updates in the backend API, models, or logic. "
-                "You have access to a 'file_reader' tool to examine any relevant files."
+                """You are a seasoned full-stack developer with a deep understanding of both frontend and backend technologies.
+                You have a knack for spotting potential integration problems before they arise.
+                Your analysis is crucial for maintaining a stable and consistent application."""
             ),
             verbose=False,
             llm=self.llm,
@@ -39,14 +60,17 @@ class BackendIntegration:
         # Backend Agent
         backend_agent = Agent(
             role="Backend Code Adjuster",
-            goal=f"""Implement necessary changes in the backend code based on the validator's findings, ensuring perfect syntax, indentation, and idiomatic Python/FastAPI patterns, while respecting the user's preferences: '{self.user_preferences}'.""",
+            goal=f"""
+            Your sole focus is to implement the necessary changes in the backend code as specified by the validator.
+            You must not deviate from the validator's instructions.
+            Your implementation must be flawless, adhering to the highest standards of code quality, including perfect syntax, indentation, and idiomatic Python/FastAPI patterns.
+            You must also respect the user's preferences: '{self.user_preferences}'.
+            You are a backend specialist, you do not touch frontend code.
+            """,
             backstory=(
-                "You are a highly skilled and meticulous backend developer, proficient in FastAPI and Python. "
-                "Your expertise lies in precisely modifying existing backend code to accommodate frontend changes, "
-                "ensuring seamless integration, preventing errors, and strictly adhering to best practices, "
-                "including proper syntax, consistent indentation, and idiomatic Python/FastAPI patterns. "
-                "You can read existing files and write modified content back to them using 'file_reader' and 'file_writer' tools. "
-                "You ONLY output code when generating it, with no additional conversational text."
+                """You are a master backend developer, a true craftsman of server-side code.
+                You are fluent in FastAPI and Python, and you take pride in writing clean, efficient, and maintainable code.
+                You are given a set of instructions, and you follow them to the letter, ensuring that the backend is always in perfect sync with the frontend."""
             ),
             verbose=False,
             llm=self.llm,
@@ -57,18 +81,11 @@ class BackendIntegration:
         # Validator Task
         validator_task = Task(
             description=f"""
-            1. **Read Frontend Changes:** Read the content of the file at '{self.frontend_changes_output_path}' to understand the frontend modifications.
-            2. **Analyze Backend Impact:** Based on the frontend changes (and keeping in mind the user's preferences: '{self.user_preferences}'), identify any new variables, changed names, or structural alterations that would require changes in the backend.
-               Consider common backend components like:
-               - FastAPI endpoints (routes, request bodies, response models)
-               - Pydantic models
-               - Database schemas (if implied by new data structures)
-               - Utility functions or business logic that interacts with frontend data.
-            3. **List All Backend Files:** You have access to a variable `all_repo_files` which is a list of all file paths in the repository. Use this list to identify all potential backend files that might need modification. Focus on Python files typically associated with backend logic (e.g., files in 'src/', 'api/', 'models/', 'schemas/').
-            4. **Output Required Changes:** If backend changes are needed, output a detailed list of:
-               - Which backend files need to be read.
-               - What specific changes (e.g., add new field 'x' to model 'Y', change endpoint '/old' to '/new') are required for each file.
-               - If no backend changes are needed, state "No backend changes required."
+            1.  **Read Frontend Changes:** Read the content of the file at '{full_frontend_changes_path}' to understand the frontend modifications.
+            2.  **Analyze Backend Impact:** Based on the frontend changes, and considering the user's preferences ('{self.user_preferences}'), identify any necessary backend changes.
+                Look for new data fields, modified API endpoints, or any other changes that require a corresponding update in the backend.
+            3.  **Consult File List:** You have access to a list of all repository files in the `all_repo_files` variable. Use this to identify potential backend files that may need changes.
+            4.  **Output Required Changes:** Produce a JSON report detailing the required backend changes. If no changes are needed, your report should indicate that.
             """,
             expected_output="""A JSON object detailing the required backend changes, or a string "No backend changes required.".
             Example for changes:
@@ -81,12 +98,6 @@ class BackendIntegration:
                         "modifications": [
                             "Add 'new_field' to ItemCreate Pydantic model.",
                             "Update '/items/' POST endpoint to handle 'new_field'."
-                        ]
-                    }},
-                    {{
-                        "path": "src/models/user.py",
-                        "modifications": [
-                            "Rename 'old_name' field to 'new_name' in User model."
                         ]
                     }}
                 ]
@@ -105,16 +116,15 @@ class BackendIntegration:
 
         # Backend Task
         backend_task = Task(
-            description=f"""
-            Based on the JSON output from the 'Frontend-Backend Change Validator' agent and the user's preferences ('{self.user_preferences}'):
-
-            1. **Parse Validator Output:** Carefully parse the JSON output from the 'Frontend-Backend Change Validator' agent.
-            2. **Check for Changes:** If the parsed JSON indicates `"changes_required": false`, then output the `"message"` from the validator's output (e.g., "No backend changes required.") and do nothing else.
-            3. **Read Relevant Files:** If `"changes_required": true`, then for each file listed in `"files_to_modify"`, use the 'file_reader' tool to read its current content.
-            4. **Apply Modifications:** Implement the specific modifications detailed by the validator for each file.
-               Ensure the changes are idiomatic to FastAPI/Python and maintain code quality.
-            5. **Write Modified Files:** For each modified file, use the 'file_writer' tool to write the updated content back to its original path.
-            6. **Output Confirmation:** After all modifications are applied and written, output a concise confirmation message listing *only* the paths of the files that were modified. DO NOT include the code content in your output.
+            description="""
+            **Your task is to act as a backend developer and implement the changes specified by the validator.**
+            1.  **Parse Validator's Report:** Carefully analyze the JSON output from the 'Frontend-Backend Change Validator'.
+            2.  **Check for Required Changes:** If the report indicates that no changes are required (`"changes_required": false`), you must output the message from the report and stop.
+            3.  **Implement Changes:** If changes are required, you must iterate through the `files_to_modify` list. For each file:
+                a.  Use the `file_reader` tool to read the file's content.
+                b.  Apply the specified modifications to the content.
+                c.  Use the `file_writer` tool to write the modified content back to the file.
+            4.  **Confirm Your Work:** After successfully modifying all the files, you must output a confirmation message that lists the paths of the files you have changed.
             """,
             expected_output="""A confirmation message stating which backend files were modified (listing their paths),
             or a message stating that no backend changes were required.

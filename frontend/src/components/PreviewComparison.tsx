@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+// No longer needed
+import { CodeChangesSlider } from "./CodeChangesSlider";
 import { 
   Code, 
   Eye, 
@@ -14,316 +16,184 @@ import {
   TrendingUp,
   Zap,
   Accessibility,
-  Smartphone
+  Smartphone,
+  Expand
 } from "lucide-react";
 
 interface PreviewComparisonProps {
   onCreatePR: () => void;
   onBack: () => void;
   repoUrl: string;
+  codeChanges: any;
 }
 
-const mockImprovements = [
-  {
-    type: "UI Enhancement",
-    description: "Updated color scheme with better contrast ratios",
-    impact: "High",
-    icon: Eye,
-  },
-  {
-    type: "Performance",
-    description: "Optimized CSS and reduced bundle size by 23%",
-    impact: "High",
-    icon: Zap,
-  },
-  {
-    type: "Accessibility",
-    description: "Added ARIA labels and semantic HTML structure",
-    impact: "Medium",
-    icon: Accessibility,
-  },
-  {
-    type: "Responsive Design",
-    description: "Improved mobile layout and touch targets",
-    impact: "Medium",
-    icon: Smartphone,
-  },
-];
+export const PreviewComparison = ({ onCreatePR, onBack, repoUrl, codeChanges }: PreviewComparisonProps) => {
+  const [isFullScreen, setIsFullScreen] = useState(false);
+  const [previewHtml, setPreviewHtml] = useState<string | null>(null);
+  const [isLoadingPreview, setIsLoadingPreview] = useState(false);
+  const [selectedFileIndex, setSelectedFileIndex] = useState<number | null>(null);
 
-const codeChanges = {
-  html: {
-    before: `<div class="header">
-  <h1>Welcome</h1>
-  <button onclick="handleClick()">Click me</button>
-</div>`,
-    after: `<header class="header" role="banner">
-  <h1 class="header__title">Welcome</h1>
-  <button 
-    class="btn btn--primary" 
-    onclick="handleClick()"
-    aria-label="Get started with our service"
-  >
-    Click me
-  </button>
-</header>`,
-  },
-  css: {
-    before: `.header {
-  background: #333;
-  color: white;
-  padding: 20px;
-}
-button {
-  background: blue;
-  color: white;
-  border: none;
-  padding: 10px;
-}`,
-    after: `.header {
-  background: var(--color-primary);
-  color: var(--color-on-primary);
-  padding: clamp(1rem, 4vw, 2rem);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
+  // Handle ESC key to close preview
+  useEffect(() => {
+    const handleEscKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && isFullScreen) {
+        setIsFullScreen(false);
+      }
+    };
 
-.btn {
-  border: none;
-  border-radius: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  font-weight: 600;
-  transition: all 0.2s ease;
-  min-height: 44px; /* Touch target */
-}
+    if (isFullScreen) {
+      document.addEventListener('keydown', handleEscKey);
+    }
 
-.btn--primary {
-  background: var(--color-accent);
-  color: var(--color-on-accent);
-}
+    return () => {
+      document.removeEventListener('keydown', handleEscKey);
+    };
+  }, [isFullScreen]);
 
-.btn--primary:hover {
-  background: var(--color-accent-hover);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-elevated);
-}`,
-  },
-};
-
-export const PreviewComparison = ({ onCreatePR, onBack, repoUrl }: PreviewComparisonProps) => {
-  const [activeTab, setActiveTab] = useState("preview");
+  const handleOpenPreview = async () => {
+    setIsLoadingPreview(true);
+    try {
+      console.log("Fetching preview from backend...");
+      const response = await fetch("http://127.0.0.1:5001/api/live_preview");
+      console.log("Preview response status:", response.status);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const html = await response.text();
+      console.log("Preview HTML received, length:", html.length);
+      setPreviewHtml(html);
+      setIsFullScreen(true);
+    } catch (error) {
+      console.error("Failed to load live preview:", error);
+      alert("Failed to load live preview. Please check if the backend server is running.");
+    } finally {
+      setIsLoadingPreview(false);
+    }
+  };
   
   const repoName = repoUrl.split("/").pop() || "repository";
 
-  return (
-    <section className="min-h-screen py-20 px-4">
-      <div className="max-w-7xl mx-auto space-y-8">
-        {/* Header */}
-        <div className="text-center space-y-4 animate-fade-in">
+  if (!codeChanges) {
+    return (
+      <section className="min-h-screen py-20 px-4">
+        <div className="max-w-7xl mx-auto space-y-8 text-center">
           <h2 className="text-4xl lg:text-5xl font-bold gradient-primary bg-clip-text text-transparent">
-            Preview Your Improvements
+            Loading Results...
           </h2>
           <p className="text-xl text-muted-foreground">
-            See the before and after comparison for <span className="font-mono font-semibold">{repoName}</span>
+            Please wait while we fetch the comparison data.
+          </p>
+        </div>
+      </section>
+    );
+  }
+
+  const { improvements, files } = codeChanges;
+
+  return (
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Global background is now handled by CSS */}
+      
+      {/* Content */}
+      <div className="relative z-10 min-h-screen py-20 px-4">
+        <div className="max-w-7xl mx-auto space-y-8">
+        {/* Header */}
+        <div className="text-center space-y-4 animate-fade-in">
+          <h2 className="text-4xl lg:text-5xl font-bold text-headline-dark tracking-tight">
+            Code Changes & Preview
+          </h2>
+          <p className="text-body-dark text-lg">
+            Review the improvements made to your codebase
           </p>
         </div>
 
-        {/* Improvements Summary */}
-        <Card className="glass-card glow-subtle animate-scale-in interactive-glow">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="w-6 h-6 text-primary" />
-              AI-Generated Improvements
-            </CardTitle>
-            <CardDescription>
-              {mockImprovements.length} improvements identified and applied
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid md:grid-cols-2 gap-4">
-              {mockImprovements.map((improvement, index) => {
-                const IconComponent = improvement.icon;
-                return (
-                  <div key={index} className="flex items-start gap-3 p-3 rounded-lg bg-muted/30">
-                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                      <IconComponent className="w-4 h-4 text-primary" />
+        {/* Live Preview Section */}
+        <div className="text-center mb-8">
+          <Button 
+            onClick={handleOpenPreview} 
+            size="lg" 
+            disabled={isLoadingPreview}
+            className="btn-primary group hover:scale-105 transition-transform"
+          >
+            {isLoadingPreview ? (
+              <>
+                <div className="w-5 h-5 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                Loading Preview...
+              </>
+            ) : (
+              <>
+                <Eye className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" />
+                Open Live Preview
+              </>
+            )}
+          </Button>
+        </div>
+
+        {/* Code Changes Section */}
+        <Card className="glass-card hover:shadow-warm transition-all duration-300 hover:-translate-y-2">
+          <CardContent className="p-6 space-y-6">
+            <div className="text-center space-y-2">
+              <div className="w-12 h-12 mx-auto rounded-full bg-gradient-to-r from-[#FF7A2B] to-[#FF9C57] flex items-center justify-center shadow-lg">
+                <Code className="w-6 h-6 text-white" />
+              </div>
+              <h3 className="text-xl font-semibold text-headline-dark">Code Changes</h3>
+              <p className="text-body-dark text-sm">Review the improvements made to your codebase</p>
+            </div>
+                      <div className="grid grid-cols-12 gap-4 h-96">
+              {/* File Tree - Left Side */}
+              <div className="col-span-3 bg-white/5 rounded-lg p-4 border border-white/10">
+                <h4 className="font-semibold text-sm mb-3 text-headline-dark">Files Modified</h4>
+                <div className="space-y-2">
+                  {files.map((file, index) => (
+                    <div 
+                      key={index}
+                      className={`flex items-center gap-2 p-2 rounded cursor-pointer text-sm transition-colors ${
+                        selectedFileIndex === index 
+                          ? 'bg-[#FF7A2B]/20 border border-[#FF7A2B]/30' 
+                          : 'hover:bg-white/5 border border-white/5'
+                      }`}
+                      onClick={() => setSelectedFileIndex(index)}
+                    >
+                      <Code className="w-4 h-4 text-[#FF7A2B]" />
+                      <span className="font-mono text-headline-dark">{file.path}</span>
                     </div>
-                    <div className="flex-1 space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">{improvement.type}</span>
-                        <Badge variant={improvement.impact === "High" ? "default" : "secondary"}>
-                          {improvement.impact}
-                        </Badge>
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        {improvement.description}
-                      </p>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Code Comparison - Center */}
+              <div className="col-span-9 bg-white/5 rounded-lg border border-white/10 overflow-hidden">
+                <div className="grid grid-cols-2 h-full">
+                  {/* Before Code */}
+                  <div className="border-r border-white/10">
+                    <div className="bg-white/10 px-4 py-2 border-b border-white/10">
+                      <h5 className="text-sm font-semibold text-headline-dark">Before</h5>
+                    </div>
+                    <div className="p-4 h-full overflow-auto">
+                      <pre className="text-xs text-body-dark whitespace-pre-wrap">
+                        {selectedFileIndex !== null ? files[selectedFileIndex]?.before : 'Select a file to view changes'}
+                      </pre>
                     </div>
                   </div>
-                );
-              })}
+                  
+                  {/* After Code */}
+                  <div>
+                    <div className="bg-[#FF7A2B]/10 px-4 py-2 border-b border-white/10">
+                      <h5 className="text-sm font-semibold text-[#FF7A2B]">After</h5>
+                    </div>
+                    <div className="p-4 h-full overflow-auto">
+                      <pre className="text-xs text-body-dark whitespace-pre-wrap">
+                        {selectedFileIndex !== null ? files[selectedFileIndex]?.after : 'Select a file to view changes'}
+                      </pre>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
-
-        {/* Preview Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="animate-slide-in">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="preview">
-              <Eye className="w-4 h-4 mr-2" />
-              Live Preview
-            </TabsTrigger>
-            <TabsTrigger value="code">
-              <Code className="w-4 h-4 mr-2" />
-              Code Changes
-            </TabsTrigger>
-            <TabsTrigger value="metrics">
-              <TrendingUp className="w-4 h-4 mr-2" />
-              Metrics
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="preview" className="space-y-6">
-            <div className="grid lg:grid-cols-2 gap-6">
-              {/* Before */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Before (Original)</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="aspect-video bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center">
-                    <div className="text-center text-gray-500">
-                      <div className="w-16 h-16 bg-gray-300 rounded mb-4 mx-auto"></div>
-                      <p className="text-sm">Original Frontend Preview</p>
-                      <p className="text-xs">Basic styling, limited responsiveness</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* After */}
-              <Card className="glass-card glow-accent interactive-glow">
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    After (AI Improved)
-                    <CheckCircle className="w-5 h-5 text-green-500" />
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="aspect-video glass-morphism rounded-lg flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="w-16 h-16 gradient-primary rounded-lg mb-4 mx-auto animate-glow"></div>
-                      <p className="text-sm font-medium">Enhanced Frontend Preview</p>
-                      <p className="text-xs text-muted-foreground">Modern design, optimized performance</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            <div className="flex justify-center">
-              <Button variant="outline" className="group">
-                <ExternalLink className="w-4 h-4 mr-2 transition-transform group-hover:scale-110" />
-                Open in StackBlitz
-              </Button>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="code" className="space-y-6">
-            <Tabs defaultValue="html">
-              <TabsList>
-                <TabsTrigger value="html">HTML</TabsTrigger>
-                <TabsTrigger value="css">CSS</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="html" className="space-y-4">
-                <div className="grid lg:grid-cols-2 gap-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-lg text-red-600">Before</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <pre className="text-sm bg-red-50 p-4 rounded-lg overflow-x-auto border-l-4 border-red-400">
-                        <code>{codeChanges.html.before}</code>
-                      </pre>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-lg text-green-600">After</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <pre className="text-sm bg-green-50 p-4 rounded-lg overflow-x-auto border-l-4 border-green-400">
-                        <code>{codeChanges.html.after}</code>
-                      </pre>
-                    </CardContent>
-                  </Card>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="css" className="space-y-4">
-                <div className="grid lg:grid-cols-2 gap-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-lg text-red-600">Before</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <pre className="text-sm bg-red-50 p-4 rounded-lg overflow-x-auto border-l-4 border-red-400">
-                        <code>{codeChanges.css.before}</code>
-                      </pre>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-lg text-green-600">After</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <pre className="text-sm bg-green-50 p-4 rounded-lg overflow-x-auto border-l-4 border-green-400">
-                        <code>{codeChanges.css.after}</code>
-                      </pre>
-                    </CardContent>
-                  </Card>
-                </div>
-              </TabsContent>
-            </Tabs>
-          </TabsContent>
-
-          <TabsContent value="metrics" className="space-y-6">
-            <div className="grid md:grid-cols-3 gap-6">
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg">Performance Score</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-green-600">92</div>
-                  <p className="text-sm text-muted-foreground">+23 improvement</p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg">Accessibility</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-blue-600">96</div>
-                  <p className="text-sm text-muted-foreground">+31 improvement</p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg">Best Practices</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-purple-600">100</div>
-                  <p className="text-sm text-muted-foreground">+15 improvement</p>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-        </Tabs>
 
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 justify-between animate-fade-in">
@@ -353,7 +223,35 @@ export const PreviewComparison = ({ onCreatePR, onBack, repoUrl }: PreviewCompar
             </Button>
           </div>
         </div>
+              </div>
       </div>
-    </section>
+      
+      {isFullScreen && previewHtml && (
+        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex flex-col items-center justify-center p-4">
+          <div className="w-full h-full max-w-6xl max-h-[95vh] bg-white rounded-xl shadow-2xl overflow-hidden relative">
+            {/* Close Button */}
+            <button
+              className="absolute top-4 left-12 bg-accent-orange/10 hover:bg-accent-orange/20 backdrop-blur-sm rounded-full p-2 transition-colors text-white z-20"
+              onClick={() => setIsFullScreen(false)}
+              aria-label="Close Preview"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            
+            {/* Preview Content */}
+            <div className="h-full">
+              <iframe
+                srcDoc={previewHtml}
+                title="Live Preview"
+                className="w-full h-full border-0"
+                sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
