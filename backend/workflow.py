@@ -8,6 +8,8 @@ from pathlib import Path
 # Ensure the src directory is in the Python path
 sys.path.append(str(Path(__file__).parent / "src"))
 
+from src.git_details import main as git_details_main
+from src.ui_detector import main as ui_detector_main
 from src.ui_advisor import UIAdvisorCrew
 from src.backend_integrator import BackendIntegration
 from src.design_validator import DesignValidatorCrew
@@ -21,7 +23,7 @@ from models.models import LLMConfig
 
 # --- Configuration ---
 REPO_URL = "https://github.com/priyank766/RAG-vs-Fine-Tuning"
-PROJECT_ROOT = Path(__file__).parent
+PROJECT_ROOT = Path(__file__).parent.parent
 REPO_DIR = PROJECT_ROOT / "repo"
 DATA_DIR = PROJECT_ROOT / "data"
 LOGS_DIR = PROJECT_ROOT / "logs"
@@ -84,30 +86,22 @@ def main(repo_url: str, user_preferences: dict):
     workflow_logger.info(f"Starting workflow for repository: {repo_url}")
 
     file_tree_json_path = DATA_DIR / "file_tree.json"
-    run_command(
-        [
-            sys.executable,
-            str(PROJECT_ROOT / "src" / "git_details.py"),
-            repo_url,
-            "--out",
-            str(file_tree_json_path),
-        ],
-        "Phase 1: Fetching Git Tree",
-        workflow_logger,
-    )
+    workflow_logger.info("--- Starting: Phase 1: Fetching Git Tree ---")
+    try:
+        git_details_main(repo_url, str(file_tree_json_path))
+        workflow_logger.info("--- Completed: Phase 1: Fetching Git Tree ---")
+    except Exception as e:
+        workflow_logger.exception("ERROR during Fetching Git Tree.")
+        raise e
 
     ui_detection_json_path = DATA_DIR / "ui_detection_output.json"
-    run_command(
-        [
-            sys.executable,
-            str(PROJECT_ROOT / "src" / "ui_detector.py"),
-            str(file_tree_json_path),
-            "--out",
-            str(ui_detection_json_path),
-        ],
-        "Phase 2: UI Detection and Analysis",
-        workflow_logger,
-    )
+    workflow_logger.info("--- Starting: Phase 2: UI Detection and Analysis ---")
+    try:
+        ui_detector_main(str(file_tree_json_path), str(ui_detection_json_path))
+        workflow_logger.info("--- Completed: Phase 2: UI Detection and Analysis ---")
+    except Exception as e:
+        workflow_logger.exception("ERROR during UI Detection and Analysis.")
+        raise e
 
     workflow_logger.info("--- Starting: Phase 3.1: UI Advisor ---")
     try:
@@ -136,19 +130,17 @@ def main(repo_url: str, user_preferences: dict):
                 "🚀 Kicking off the UI Advisor & Generator Crew... this may take a few moments."
             )
 
+            workflow_logger.info("--- Kicking off UI Advisor Crew ---")
             result = advisor_crew.run()
+            workflow_logger.info(f"--- UI Advisor Crew Finished. Result: {result} ---")
 
             print("--- ✅ UI Advisor, Generator, and Writer Crew Finished ---")
             print("Final Result:")
             print(result)
 
             # Determine the path to the modified UI file for Phase 4
-            ui_file_for_backend_analysis = ui_detection_output.get("examples", [])[0]
-            if not ui_file_for_backend_analysis:
-                workflow_logger.error(
-                    "Could not determine UI file path for backend analysis. Exiting."
-                )
-                sys.exit(1)
+            examples = ui_detection_output.get("examples", [])
+            ui_file_for_backend_analysis = examples[:]
 
             full_ui_file_path = REPO_DIR / ui_file_for_backend_analysis
             try:
@@ -177,7 +169,11 @@ def main(repo_url: str, user_preferences: dict):
                 print(
                     "\n🚀 Kicking off the Backend Integration Crew... this may take a few moments.\n"
                 )
+                workflow_logger.info("--- Kicking off Backend Integration Crew ---")
                 backend_result = backend_integration_crew.run()
+                workflow_logger.info(
+                    f"--- Backend Integration Crew Finished. Result: {backend_result} ---"
+                )
                 print("--- ✅ Backend Integration Crew Finished ---")
                 print("Final Result:\n")
                 print(backend_result)
@@ -194,8 +190,6 @@ def main(repo_url: str, user_preferences: dict):
                     modified_ui_content
                 )
 
-
-
                 workflow_logger.info("--- Starting: Phase 5: Design Validation ---")
                 try:
                     modified_files = [ui_file_for_backend_analysis]
@@ -208,7 +202,16 @@ def main(repo_url: str, user_preferences: dict):
                         modified_files.extend(modified_backend_files)
                         # Capture before/after for backend files too
                         for f_path in modified_backend_files:
-                            original_backend_content = read_file.run(f_path)
+                            try:
+                                with open(
+                                    REPO_DIR / f_path, "r", encoding="utf-8"
+                                ) as f:
+                                    original_backend_content = f.read()
+                            except Exception as e:
+                                workflow_logger.error(
+                                    f"Error reading backend file {f_path}: {e}"
+                                )
+                                original_backend_content = ""
                             file_changes_tracker[f_path] = {
                                 "before": original_backend_content,
                                 "after": "",
@@ -228,12 +231,29 @@ def main(repo_url: str, user_preferences: dict):
 
                     # --- Capture content after Design Validation for all modified files ---
                     for f_path in modified_files:
-                        final_content = read_file.run(f_path)
+                        try:
+                            with open(REPO_DIR / f_path, "r", encoding="utf-8") as f:
+                                final_content = f.read()
+                        except Exception as e:
+                            workflow_logger.error(
+                                f"Error reading final content of {f_path}: {e}"
+                            )
+                            final_content = ""
                         if f_path in file_changes_tracker:
                             file_changes_tracker[f_path]["after"] = final_content
                         else:  # Case where Design Validator might modify a file not touched by UI Advisor/Backend Integrator
+                            try:
+                                with open(
+                                    REPO_DIR / f_path, "r", encoding="utf-8"
+                                ) as f:
+                                    before_content = f.read()
+                            except Exception as e:
+                                workflow_logger.error(
+                                    f"Error reading before content of {f_path}: {e}"
+                                )
+                                before_content = ""
                             file_changes_tracker[f_path] = {
-                                "before": read_file.run(f_path),
+                                "before": before_content,
                                 "after": final_content,
                             }
 
@@ -271,14 +291,14 @@ def main(repo_url: str, user_preferences: dict):
                     print(
                         f"An unexpected error occurred during the Design Validation phase: {e}"
                     )
-                    sys.exit(1)
+                    raise
 
             except Exception as e:
                 workflow_logger.exception("ERROR during Backend Integration execution.")
                 print(
                     f"An unexpected error occurred during the Backend Integration phase: {e}"
                 )
-                sys.exit(1)
+                raise
 
         else:
             workflow_logger.info(
@@ -290,7 +310,7 @@ def main(repo_url: str, user_preferences: dict):
     except Exception as e:
         workflow_logger.exception("ERROR during UI Advisor execution.")
         print(f"An unexpected error occurred during the UI Advisor phase: {e}")
-        sys.exit(1)
+        raise
 
     workflow_logger.info("--- Workflow Complete ---")
     print("\nWorkflow finished successfully. Check logs for details.")

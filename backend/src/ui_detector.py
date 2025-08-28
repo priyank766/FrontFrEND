@@ -90,7 +90,24 @@ def detect_ui(file_tree: dict) -> dict:
     return {"exists": exists, "tech": tech, "examples": examples}
 
 
-def main():
+def main(file_tree_path: str, out: str):
+    setup_logging("ui_detector.log")
+
+    try:
+        file_tree_data = read_json_file(file_tree_path)
+
+        detection_result = detect_ui(file_tree_data)
+
+        write_json_file(detection_result, out)
+        logging.info(f"UI detection results successfully written to {out}")
+        print(json.dumps(detection_result, indent=2))  # Print for direct output
+
+    except Exception as e:
+        logging.exception(f"An unexpected error occurred in UI Detector: {e}")
+        raise
+
+
+if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="UI Detector agent.")
     parser.add_argument(
         "file_tree_path",
@@ -102,21 +119,4 @@ def main():
         help="Output JSON file name for detection results (will be saved in the 'data' directory).",
     )
     args = parser.parse_args()
-
-    setup_logging("ui_detector.log")
-
-    try:
-        file_tree_data = read_json_file(args.file_tree_path)
-
-        detection_result = detect_ui(file_tree_data)
-
-        write_json_file(detection_result, args.out)
-        logging.info(f"UI detection results successfully written to {args.out}")
-        print(json.dumps(detection_result, indent=2))  # Print for direct output
-
-    except Exception as e:
-        logging.exception(f"An unexpected error occurred in UI Detector: {e}")
-
-
-if __name__ == "__main__":
-    main()
+    main(args.file_tree_path, args.out)

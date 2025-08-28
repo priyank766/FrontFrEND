@@ -7,6 +7,8 @@ build/
 uv.lock
 .env
 *.log
+backend\data
+data
 *.prof
 .DS_Store
 prompt.md

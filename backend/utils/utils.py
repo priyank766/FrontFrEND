@@ -4,7 +4,7 @@ from pathlib import Path
 
 def setup_logging(log_file_name: str):
     """Configures logging for the application."""
-    log_dir = Path(__file__).parent.parent / "logs"
+    log_dir = Path(__file__).parent.parent.parent / "logs"
     log_dir.mkdir(parents=True, exist_ok=True)
     log_file_path = log_dir / log_file_name
     logging.basicConfig(
@@ -18,7 +18,7 @@ def setup_logging(log_file_name: str):
 
 def read_json_file(file_name: str) -> dict:
     """Reads and parses a JSON file from the 'data' directory."""
-    data_file_path = Path(__file__).parent.parent / "data" / file_name
+    data_file_path = Path(__file__).parent.parent.parent / "data" / file_name
     try:
         with open(data_file_path, 'r') as f:
             return json.load(f)
@@ -31,7 +31,7 @@ def read_json_file(file_name: str) -> dict:
 
 def write_json_file(data: dict, file_name: str):
     """Writes a dictionary to a JSON file in the 'data' directory."""
-    data_dir = Path(__file__).parent.parent / "data"
+    data_dir = Path(__file__).parent.parent.parent / "data"
     data_dir.mkdir(parents=True, exist_ok=True)
     data_file_path = data_dir / file_name
     try:

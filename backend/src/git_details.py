@@ -1,9 +1,9 @@
-import os
-import subprocess
 import argparse
 import logging
 from pathlib import Path
 from utils import setup_logging, write_json_file
+import git
+
 
 def get_existing_remote_url(repo_path: Path) -> str | None:
     """Gets the remote URL of an existing local repository."""
@@ -12,16 +12,14 @@ def get_existing_remote_url(repo_path: Path) -> str | None:
         return None
     try:
         logging.debug(f"Fetching remote URL from {repo_path}")
-        result = subprocess.run(
-            ["git", "config", "--get", "remote.origin.url"],
-            cwd=repo_path, capture_output=True, text=True, check=True
-        )
-        remote_url = result.stdout.strip()
+        repo = git.Repo(repo_path)
+        remote_url = repo.remotes.origin.url
         logging.debug(f"Found remote URL: {remote_url}")
         return remote_url
-    except (subprocess.CalledProcessError, FileNotFoundError) as e:
+    except Exception as e:
         logging.error(f"Could not get remote URL from {repo_path}: {e}")
         return None
+
 
 def list_files(root: Path) -> list:
     """Lists all files in a directory recursively."""
@@ -29,50 +27,68 @@ def list_files(root: Path) -> list:
     files = []
     for path in root.rglob("*"):
         if path.is_file():
-            files.append({
-                "path": str(path.relative_to(root)).replace('\\', '/'),
-                "size": path.stat().st_size,
-                "type": path.suffix or ""
-            })
+            files.append(
+                {
+                    "path": str(path.relative_to(root)).replace("\\", "/"),
+                    "size": path.stat().st_size,
+                    "type": path.suffix or "",
+                }
+            )
     logging.info(f"Found {len(files)} files.")
     return files
 
-def main():
-    """Clones a repo if it doesn't exist or if it's the wrong one, then lists files."""
-    parser = argparse.ArgumentParser(description="Clone repo and list files to JSON.")
-    parser.add_argument("url", help="GitHub repository URL to clone")
-    parser.add_argument("--out", default="file_tree.json", help="Output JSON file name (will be saved in the 'data' directory)")
-    args = parser.parse_args()
 
+def main(url: str, out: str):
+    """Clones a repo if it doesn't exist or if it's the wrong one, then lists files."""
     setup_logging("git_details.log")
 
-    repo_dir = Path("./repo")
+    repo_dir = Path(__file__).parent.parent.parent / "repo"
 
     try:
         if repo_dir.exists() and repo_dir.is_dir():
             existing_url = get_existing_remote_url(repo_dir)
             if existing_url:
-                if existing_url == args.url:
-                    logging.info(f"Repository {args.url} already exists. Skipping clone.")
+                if existing_url == url:
+                    logging.info(f"Repository {url} already exists. Pulling latest changes.")
+                    repo = git.Repo(repo_dir)
+                    repo.remotes.origin.pull()
                 else:
-                    logging.error(f"Another repository ({existing_url}) is already cloned.")
-                    logging.error("Please remove the 'repo' directory to clone a new one.")
+                    logging.error(
+                        f"Another repository ({existing_url}) is already cloned."
+                    )
+                    logging.error(
+                        "Please remove the 'repo' directory to clone a new one."
+                    )
                     return
             else:
-                logging.error(f"Directory 'repo' exists but is not a git repository.")
+                logging.error("Directory 'repo' exists but is not a git repository.")
                 return
         else:
-            logging.info(f"Cloning {args.url} into {repo_dir}...")
-            subprocess.run(["git", "clone", args.url, str(repo_dir)], check=True, capture_output=True)
+            logging.info(f"Cloning {url} into {repo_dir}...")
+            git.Repo.clone_from(url, str(repo_dir))
 
         tree = list_files(repo_dir)
-        write_json_file({"files": tree}, args.out)
-        logging.info(f"File tree JSON successfully written to {args.out}")
+        write_json_file({"files": tree}, out)
+        logging.info(f"File tree JSON successfully written to {out}")
 
-    except subprocess.CalledProcessError as e:
-        logging.exception(f"A git command failed!\nStderr: {e.stderr.decode()}\nStdout: {e.stdout.decode()}")
+    except git.exc.GitCommandError as e:
+        logging.exception(
+            f"A git command failed!\nStderr: {e.stderr}\nStdout: {e.stdout}"
+        )
+        raise
     except Exception as e:
         logging.exception(f"An unexpected error occurred: {e}")
+        raise
+
+
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description="Clone repo and list files to JSON.")
+    parser.add_argument("url", help="GitHub repository URL to clone")
+    parser.add_argument(
+        "--out",
+        default="file_tree.json",
+        help="Output JSON file name (will be saved in the 'data' directory)",
+    )
+    args = parser.parse_args()
+    main(args.url, args.out)

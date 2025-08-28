@@ -1,4 +1,5 @@
 import logging
+import litellm
 from crewai import Agent, Task, Crew, Process, LLM
 from tools.tools import read_file, write_file
 from models import LLMConfig
@@ -6,7 +7,12 @@ from pathlib import Path
 
 
 class UIAdvisorCrew:
-    def __init__(self, repo_path: Path, ui_detection_output: dict, user_preferences: str):
+    def __init__(
+        self,
+        repo_path: Path,
+        ui_detection_output: dict,
+        user_preferences: str,
+    ):
         """
         Initializes the UIAdvisorCrew with UI detection data and user preferences.
         """
@@ -15,8 +21,7 @@ class UIAdvisorCrew:
         self.user_preferences = user_preferences
         self.llm = LLM(
             model=LLMConfig().model_name,
-            temperature=LLMConfig().temperature,
-            base_url=LLMConfig().base_url,
+            temperature=LLMConfig().temperature
         )
         self.file_read_tool = read_file
         self.file_write_tool = write_file
@@ -25,6 +30,7 @@ class UIAdvisorCrew:
         """
         Sets up and runs the UI analysis and advisory crew.
         """
+        litellm.safe_mode = True
         if not self.ui_detection_output.get("exists"):
             return "UI does not exist. The UI Advisor crew has nothing to analyze."
 

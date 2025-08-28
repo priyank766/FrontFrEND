@@ -29,7 +29,11 @@ export const ProcessingStatus = ({ onComplete, messages, progress }: ProcessingS
     // Calculate phase-specific progress
     const phaseProgressPercent = ((progress % 20) / 20) * 100;
     setPhaseProgress(phaseProgressPercent);
-  }, [progress]);
+
+    if (progress >= 100) {
+      onComplete();
+    }
+  }, [progress, onComplete]);
 
   return (
     <div className="min-h-screen relative overflow-hidden">
