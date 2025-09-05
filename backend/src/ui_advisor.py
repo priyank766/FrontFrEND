@@ -144,7 +144,7 @@ class UIAdvisorCrew:
             1. **Read the Original File:** Before writing any code, you MUST use the 'file_reader' tool to read the full content of the original UI file at: '{full_ui_file_path}'.
             2. **Integrate Suggestions:** Take the *entire content* of the original file you just read, and integrate the specific UI/UX improvement suggestions provided by the UI Advisor into it. Do not remove any code unless explicitly part of a your code changes.
                When implementing the changes, you must follow these UI/UX guidelines:
-               - Try unique designs for backgrounds, font styles, gradients, animations, and visuals/images for a better UI.
+               - Try unique designs for backgrounds, font styles, gradients,esthetic animations,actual working buttons and visuals/images for a better UI.
                - Always prioritize readability (use proper color combinations which are readable in different backgrounds; avoid white background with white text or white button that cause readability issues).
                  Example: light backgrounds with light color text or white buttons that cause readability issues.
                - Ensure all visuals, images, and graphs are presentable, well-sized, and do not overflow or break the layout/frame. Use responsive or max-width styles as needed.
