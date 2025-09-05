@@ -9,10 +9,10 @@ uv.lock
 *.log
 backend/data
 data
-repo
 *.prof
 .DS_Store
 prompt.md
+repo
 frontend/node_modules/
 frontend/bun.lockb
 frontend/package-lock.json

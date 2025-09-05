@@ -65,7 +65,7 @@ def workflow_runner(repo_url, user_preferences):
         workflow_results = {"status": "error", "message": str(e)}
         workflow_messages_queue.put(f"ERROR: {e}")
         workflow_messages_queue.put(
-            "FRONTEND_WORKFLOW_COMPLETE"
+            "FRONTEND_WORKFLOW_COMPLETE" 
         )  # Signal for frontend even on error
 
 
@@ -152,7 +152,7 @@ def get_live_preview():
     # Assuming REPO_DIR is accessible here, or passed as an app config
     # For now, let's assume PROJECT_ROOT is the base for repo
     repo_root = (
-        PROJECT_ROOT.parent / "repo"
+        PROJECT_ROOT / "repo" 
     )  # Go up one level from backend to FrontFrEND, then into repo
 
     for relative_path in example_files:
@@ -196,4 +196,4 @@ def get_live_preview():
 if __name__ == "__main__":
     # This is a simple way to run Flask for development.
     # For production, use a WSGI server like Gunicorn or uWSGI.
-    app.run(debug=True, host="127.0.0.1", port=5001)
+    app.run(debug=True, use_reloader=False, host="127.0.0.1", port=5001)

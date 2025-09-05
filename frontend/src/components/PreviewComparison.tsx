@@ -143,7 +143,7 @@ export const PreviewComparison = ({ onCreatePR, onBack, repoUrl, codeChanges }: 
             </div>
                       <div className="grid grid-cols-12 gap-4 h-96">
               {/* File Tree - Left Side */}
-              <div className="col-span-3 bg-white/5 rounded-lg p-4 border border-white/10">
+              <div className="col-span-3 bg-white/5 rounded-lg p-4 border border-white/10 h-full">
                 <h4 className="font-semibold text-sm mb-3 text-headline-dark">Files Modified</h4>
                 <div className="space-y-2">
                   {files.map((file, index) => (
@@ -164,14 +164,14 @@ export const PreviewComparison = ({ onCreatePR, onBack, repoUrl, codeChanges }: 
               </div>
               
               {/* Code Comparison - Center */}
-              <div className="col-span-9 bg-white/5 rounded-lg border border-white/10 overflow-hidden">
+              <div className="col-span-9 bg-white/5 rounded-lg border border-white/10 overflow-hidden h-full">
                 <div className="grid grid-cols-2 h-full">
                   {/* Before Code */}
-                  <div className="border-r border-white/10">
+                  <div className="border-r border-white/10 flex flex-col">
                     <div className="bg-white/10 px-4 py-2 border-b border-white/10">
                       <h5 className="text-sm font-semibold text-headline-dark">Before</h5>
                     </div>
-                    <div className="p-4 h-full overflow-auto">
+                    <div className="p-4 flex-grow overflow-y-auto">
                       <pre className="text-xs text-body-dark whitespace-pre-wrap">
                         {selectedFileIndex !== null ? files[selectedFileIndex]?.before : 'Select a file to view changes'}
                       </pre>
@@ -179,11 +179,11 @@ export const PreviewComparison = ({ onCreatePR, onBack, repoUrl, codeChanges }: 
                   </div>
                   
                   {/* After Code */}
-                  <div>
+                  <div className="flex flex-col">
                     <div className="bg-[#FF7A2B]/10 px-4 py-2 border-b border-white/10">
                       <h5 className="text-sm font-semibold text-[#FF7A2B]">After</h5>
                     </div>
-                    <div className="p-4 h-full overflow-auto">
+                    <div className="p-4 flex-grow overflow-y-auto">
                       <pre className="text-xs text-body-dark whitespace-pre-wrap">
                         {selectedFileIndex !== null ? files[selectedFileIndex]?.after : 'Select a file to view changes'}
                       </pre>

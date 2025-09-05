@@ -17,6 +17,24 @@ class BackendIntegration:
         self.frontend_changes_output_path = frontend_changes_output_path
         self.file_tree_path = file_tree_path
         self.user_preferences = user_preferences
+
+        formatted_preferences = []
+        if self.user_preferences.get("improvements"):
+            formatted_preferences.append(
+                f"- Desired Improvements: {', '.join(self.user_preferences['improvements'])}"
+            )
+        if self.user_preferences.get("theme"):
+            formatted_preferences.append(f"- Theme: {self.user_preferences['theme']}")
+        if self.user_preferences.get("priority"):
+            formatted_preferences.append(
+                f"- Priority: {self.user_preferences['priority']}"
+            )
+        if self.user_preferences.get("additionalDetails"):
+            formatted_preferences.append(
+                f"- Additional Details: {self.user_preferences['additionalDetails']}"
+            )
+
+        self.formatted_preferences = "\n".join(formatted_preferences)
         self.llm = LLM(
             model=LLMConfig().model_name,
             temperature=LLMConfig().temperature,
@@ -44,7 +62,7 @@ class BackendIntegration:
             You must analyze the changes made to the frontend code and determine the precise impact on the backend.
             This involves identifying any new data requirements, API changes, or other modifications needed to support the new frontend features.
             You must be meticulous in your analysis to prevent any integration issues.
-            User preferences to consider: '{self.user_preferences}'.
+            User preferences to consider:\n{self.formatted_preferences}. 
             """,
             backstory=(
                 """You are a seasoned full-stack developer with a deep understanding of both frontend and backend technologies.
@@ -64,7 +82,7 @@ class BackendIntegration:
             Your sole focus is to implement the necessary changes in the backend code as specified by the validator.
             You must not deviate from the validator's instructions.
             Your implementation must be flawless, adhering to the highest standards of code quality, including perfect syntax, indentation, and idiomatic Python/FastAPI patterns.
-            You must also respect the user's preferences: '{self.user_preferences}'.
+            You must also respect the user's preferences:\n{self.formatted_preferences}.
             You are a backend specialist, you do not touch frontend code.
             """,
             backstory=(
@@ -82,7 +100,7 @@ class BackendIntegration:
         validator_task = Task(
             description=f"""
             1.  **Read Frontend Changes:** Read the content of the file at '{full_frontend_changes_path}' to understand the frontend modifications.
-            2.  **Analyze Backend Impact:** Based on the frontend changes, and considering the user's preferences ('{self.user_preferences}'), identify any necessary backend changes.
+            2.  **Analyze Backend Impact:** Based on the frontend changes, and considering the user's preferences (\n{self.formatted_preferences}), identify any necessary backend changes.
                 Look for new data fields, modified API endpoints, or any other changes that require a corresponding update in the backend.
             3.  **Consult File List:** You have access to a list of all repository files in the `all_repo_files` variable. Use this to identify potential backend files that may need changes.
             4.  **Output Required Changes:** Produce a JSON report detailing the required backend changes. If no changes are needed, your report should indicate that.
