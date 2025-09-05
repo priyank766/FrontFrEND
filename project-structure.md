@@ -109,4 +109,5 @@ This phase focuses on deploying the application to Azure, configuring Azure-prov
 This phase involves implementing a system to provide users with limited free usage, such as a token-based system (e.g., "1 flowers" as a token) to access product features.
 if it is used then say no more for use FrontFrEND
 ---
-_End of Prompt File._
+
+
