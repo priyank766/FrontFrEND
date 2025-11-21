@@ -138,7 +138,7 @@ def main(repo_url: str, user_preferences: dict):
 
             workflow_logger.info("--- Kicking off UI Advisor Crew ---")
             result = None
-            max_retries = 3
+            max_retries = 2
             retry_delay = 15  # seconds
             for attempt in range(max_retries):
                 try:
