@@ -119,7 +119,7 @@ def main(repo_url: str, user_preferences: dict):
         if ui_detection_output.get("exists"):
             workflow_logger.info(f"UI detected: {ui_detection_output.get('tech')}")
             workflow_logger.info(
-                f"Example UI files: {ui_detection_output.get('file_names')}"
+                f"Example UI files: {ui_detection_output.get('examples')}"
             )
 
             # Use user preferences directly from argument
