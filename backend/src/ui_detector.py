@@ -22,8 +22,8 @@ def detect_ui(file_tree: dict) -> dict:
         if f["path"].endswith(".py")
         and (
             "streamlit" in f["path"].lower()
-            or "app.py" in f["path"].lower()
-            or "main.py" in f["path"].lower()
+            or "streamlit_app.py" in f["path"].lower()
+
         )
     ]
     if streamlit_files:
