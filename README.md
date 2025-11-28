@@ -11,7 +11,7 @@
 
 FrontFrEND operates as a pipeline of autonomous agents, each with a specific role in the frontend engineering lifecycle:
 
-### 1. 🕵️‍♂️ **Reconnaissance Agent (Git & UI Detector)**
+### 1. 🕵️‍♂️ **(Git & UI Detector)**
 - **Phase 1 & 2**: Deeply scans the target repository to build a comprehensive file tree.
 - **Intelligence**: Automatically identifies the underlying tech stack (React, Vue, Vanilla JS, etc.) and locates key UI entry points.
 
@@ -93,6 +93,7 @@ Open your browser to `http://localhost:5173` (or the port shown in your terminal
 We welcome contributions to make our agents smarter! Please see `CONTRIBUTING.md` for details on how to train or modify the agent crews.
 
 ---
+
 
 
 
