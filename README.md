@@ -5,8 +5,11 @@
 **FrontFrEND** is an advanced **Agentic AI** system designed to autonomously analyze, refactor, and elevate the frontend quality of GitHub repositories. Unlike simple code assistants, FrontFrEND employs a **multi-agent orchestration** strategy to understand your codebase, detect UI frameworks, and deploy specialized AI crews to implement modern design patterns.
 
 ----
-[![Watch the video](https://markdown-videos-api.jorgenkh.no/url?url=https%3A%2F%2Fyoutu.be%2FoGVMxunVoQ8)](https://youtu.be/oGVMxunVoQ8)
-
+<div align="center">
+  <a href="https://youtu.be/oGVMxunVoQ8">
+    <img src="https://img.youtube.com/vi/oGVMxunVoQ8/maxresdefault.jpg" alt="Watch the video" width="600" />
+  </a>
+</div>
 ## 🤖 Agentic Architecture
 
 FrontFrEND operates as a pipeline of autonomous agents, each with a specific role in the frontend engineering lifecycle:
@@ -93,6 +96,7 @@ Open your browser to `http://localhost:5173` (or the port shown in your terminal
 We welcome contributions to make our agents smarter! Please see `CONTRIBUTING.md` for details on how to train or modify the agent crews.
 
 ---
+
 
 
 
