@@ -6,7 +6,7 @@
 
 ----
 
-```html
+
 <iframe width="560" height="315" 
         src="https://www.youtube.com/embed/oGVMxunVoQ8" 
         title="YouTube video player" 
@@ -14,7 +14,7 @@
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
         allowfullscreen>
 </iframe>
-```
+
 
 ## 🤖 Agentic Architecture
 
@@ -102,6 +102,7 @@ Open your browser to `http://localhost:5173` (or the port shown in your terminal
 We welcome contributions to make our agents smarter! Please see `CONTRIBUTING.md` for details on how to train or modify the agent crews.
 
 ---
+
 
 
 
